@@ -1,0 +1,14 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: registroDatosIncorrectos
+
+  r2dbc:
+    url: ${R2DBC_URL:r2dbc:postgresql://neondb_owner:npg_4kmPOxi6fKjL@ep-morning-bread-acudwb78-pooler.sa-east-1.aws.neon.tech/eventpass?sslmode=require&channel_binding=require}
+    pool:
+      enable: true
+      initial-size: 2
+      max-size: 10
+      max-idle-time: 30m
