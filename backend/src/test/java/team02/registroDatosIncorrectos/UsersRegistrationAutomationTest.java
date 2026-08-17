@@ -3,6 +3,7 @@ package team02.registroDatosIncorrectos;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -12,20 +13,19 @@ import team02.registroDatosIncorrectos.model.Users;
 import team02.registroDatosIncorrectos.rest.UsersRest;
 import team02.registroDatosIncorrectos.service.UsersService;
 
-@WebFluxTest(controllers = UsersRest.class)
+// Se desactiva la seguridad reactiva solo para que la prueba pueda evaluar los datos sin ser bloqueada
+@WebFluxTest(controllers = UsersRest.class, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class})
 public class UsersRegistrationAutomationTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
-    // Se "simula" el servicio para aislar la prueba y evaluar solo las validaciones
     @MockBean
     private UsersService usersService;
 
     @Test
     @DisplayName("Caso C02: Registro con formato incorrecto en correo y celular debe devolver 400")
     public void testC02_InvalidEmailAndCellphoneFormat_ReturnsBadRequest() {
-        // Arrange: Preparar datos base correctos
         Users invalidUser = new Users();
         invalidUser.setName("Juan Perez");
         invalidUser.setType_document("DNI");
@@ -34,27 +34,24 @@ public class UsersRegistrationAutomationTest {
         invalidUser.setGender("M");
         invalidUser.setPassword("Password123@");
         
-        // Arrange: Inyectar datos INVÁLIDOS para el Caso C02
-        invalidUser.setEmail("usuario_sin_dominio.com"); // Formato incorrecto
-        invalidUser.setCellphone("123456789"); // Formato incorrecto
+        invalidUser.setEmail("usuario_sin_dominio.com"); 
+        invalidUser.setCellphone("123456789"); 
 
-        // Act & Assert: Enviar petición y validar que el sistema lo rechaza
         webTestClient.post()
                 .uri("/api/v1/users/save")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(invalidUser)
                 .exchange()
-                .expectStatus().isBadRequest() // Comprueba que el status sea 400
+                .expectStatus().isBadRequest() 
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(400)
-                .jsonPath("$.errors.email").exists() // Comprueba que detectó el error de email
-                .jsonPath("$.errors.cellphone").exists(); // Comprueba que detectó el error de celular
+                .jsonPath("$.errors.email").exists() 
+                .jsonPath("$.errors.cellphone").exists(); 
     }
 
     @Test
     @DisplayName("Caso C03: Registro con edad inferior a 18 debe devolver 400")
     public void testC03_AgeBelowMinimum_ReturnsBadRequest() {
-        // Arrange: Preparar datos base correctos
         Users underageUser = new Users();
         underageUser.setName("Maria Gomez");
         underageUser.setType_document("DNI");
@@ -64,18 +61,16 @@ public class UsersRegistrationAutomationTest {
         underageUser.setGender("F");
         underageUser.setPassword("Password123@");
         
-        // Arrange: Inyectar dato INVÁLIDO para el Caso C03
-        underageUser.setAge(17L); // Edad no permitida
+        underageUser.setAge(17L); 
 
-        // Act & Assert: Enviar petición y validar que el sistema lo rechaza
         webTestClient.post()
                 .uri("/api/v1/users/save")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(underageUser)
                 .exchange()
-                .expectStatus().isBadRequest() // Comprueba que el status sea 400
+                .expectStatus().isBadRequest() 
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(400)
-                .jsonPath("$.errors.age").exists(); // Comprueba que detectó el error de edad
+                .jsonPath("$.errors.age").exists(); 
     }
 }
