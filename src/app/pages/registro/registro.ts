@@ -1,9 +1,14 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { UserRequest } from '../../models/user.model';
+import { UserService } from '../../services/user.service';
 import { confirmPasswordValidator } from '../../validators/confirm-password';
 import { documentValidator } from '../../validators/document';
 import { sinNumerosValidator } from '../../validators/sin-numeros';
+
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@_\.;:-])[A-Za-z\d@_\.;:-]+$/;
 
 @Component({
   selector: 'app-registro',
@@ -13,6 +18,7 @@ import { sinNumerosValidator } from '../../validators/sin-numeros';
 })
 export class Registro {
   private readonly fb = inject(FormBuilder);
+  private readonly userService = inject(UserService);
 
   readonly tiposDocumento = ['DNI', 'CNE'];
 
@@ -28,6 +34,8 @@ export class Registro {
   readonly direccion = signal<'adelante' | 'atras'>('adelante');
   readonly enviado = signal(false);
   readonly exitoso = signal(false);
+  readonly cargando = signal(false);
+  readonly mensajeErrorServidor = signal<string | null>(null);
 
   readonly formulario = this.fb.nonNullable.group({
     paso1: this.fb.nonNullable.group({
@@ -43,7 +51,7 @@ export class Registro {
       sexo: ['', [Validators.required]],
     }),
     paso3: this.fb.nonNullable.group({
-      contrasena: ['', [Validators.required, Validators.minLength(8)]],
+      contrasena: ['', [Validators.required, Validators.minLength(8), Validators.pattern(PASSWORD_PATTERN)]],
       confirmarContrasena: ['', [Validators.required, confirmPasswordValidator('contrasena')]],
       aceptaTerminos: [false, [Validators.requiredTrue]],
       aceptaPrivacidad: [false, [Validators.requiredTrue]],
@@ -58,6 +66,7 @@ export class Registro {
     celular: 'Ingresa un celular válido (debe comenzar con 9 y tener 9 dígitos).',
     edad: 'Debes tener entre 18 y 99 años.',
     contrasena: 'Mínimo 8 caracteres.',
+    contrasenaPattern: 'Debe incluir al menos una mayúscula, una minúscula, un número y un símbolo (@ _ . ; : -).',
     confirmar: 'Las contraseñas no coinciden.',
     terminos: 'Debes aceptar los términos y condiciones.',
     privacidad: 'Debes aceptar la política de privacidad.',
@@ -85,12 +94,14 @@ export class Registro {
       return;
     }
     this.enviado.set(false);
+    this.mensajeErrorServidor.set(null);
     this.direccion.set('adelante');
     this.pasoActual.set(Math.min(3, this.pasoActual() + 1));
   }
 
   anterior(): void {
     this.enviado.set(false);
+    this.mensajeErrorServidor.set(null);
     this.direccion.set('atras');
     this.pasoActual.set(Math.max(1, this.pasoActual() - 1));
   }
@@ -119,6 +130,9 @@ export class Registro {
       return this.mensajes.documentoLongitud(len);
     }
     if (control.hasError('pattern')) {
+      if (campo === 'paso3.contrasena') {
+        return this.mensajes.contrasenaPattern;
+      }
       return this.mensajes.celular;
     }
     if (control.hasError('min') || control.hasError('max')) {
@@ -144,11 +158,51 @@ export class Registro {
 
   enviar(): void {
     this.enviado.set(true);
+    this.mensajeErrorServidor.set(null);
     this.grupoPaso(3)?.markAllAsTouched();
-    if (this.formulario.invalid) {
+
+    if (this.formulario.invalid || this.cargando()) {
       return;
     }
-    this.exitoso.set(true);
-    console.log('Datos de registro:', this.formulario.getRawValue());
+
+    const raw = this.formulario.getRawValue();
+    const nombreCompleto = `${raw.paso1.nombre.trim()} ${raw.paso1.apellidos.trim()}`.trim();
+
+    const usuario: UserRequest = {
+      name: nombreCompleto,
+      type_document: raw.paso1.tipoDocumento,
+      number_document: raw.paso1.numeroDocumento.trim(),
+      email: raw.paso2.correo.trim(),
+      cellphone: raw.paso2.celular.trim(),
+      age: Number(raw.paso2.edad),
+      gender: raw.paso2.sexo === 'Masculino' ? 'M' : 'F',
+      password: raw.paso3.contrasena,
+    };
+
+    this.cargando.set(true);
+
+    this.userService.crearUsuario(usuario).subscribe({
+      next: () => {
+        this.cargando.set(false);
+        this.exitoso.set(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cargando.set(false);
+        console.error('Error al registrar usuario:', err);
+
+        if (err.error?.errors && typeof err.error.errors === 'object') {
+          const firstKey = Object.keys(err.error.errors)[0];
+          const errorMsg = err.error.errors[firstKey];
+          this.mensajeErrorServidor.set(errorMsg || 'Error de validación en los datos ingresados.');
+        } else if (err.error?.message) {
+          this.mensajeErrorServidor.set(err.error.message);
+        } else if (err.status === 0) {
+          this.mensajeErrorServidor.set('No se pudo conectar con el servidor backend (http://localhost:8081). Verifica que esté encendido.');
+        } else {
+          this.mensajeErrorServidor.set(`Error del servidor (${err.status}): ${err.statusText || 'No se pudo completar el registro'}`);
+        }
+      },
+    });
   }
 }
+
