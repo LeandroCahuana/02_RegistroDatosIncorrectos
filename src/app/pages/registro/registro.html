@@ -92,9 +92,26 @@
           </p>
         </header>
 
+        @if (mensajeErrorServidor()) {
+          <div class="alerta-error" role="alert">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ mensajeErrorServidor() }}</span>
+          </div>
+        }
+
         @if (exitoso()) {
           <div class="exito" role="status">
-            <p>¡Cuenta creada con éxito!</p>
+            <div class="exito__icono">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h2 class="exito__titulo">¡Cuenta creada con éxito!</h2>
+            <p class="exito__desc">Tu usuario ha sido registrado correctamente en la base de datos.</p>
           </div>
         } @else {
           <nav class="pasos" aria-label="Progreso del registro">
@@ -242,7 +259,7 @@
                           id="celular"
                           type="tel"
                           formControlName="celular"
-                          placeholder="300 123 4567"
+                          placeholder="912345678"
                           autocomplete="tel"
                         />
                       </div>
@@ -316,7 +333,7 @@
                           id="contrasena"
                           type="password"
                           formControlName="contrasena"
-                          placeholder="Mínimo 8 caracteres"
+                          placeholder="Mínimo 8 car., Mayús, Núm, Símbolo"
                           autocomplete="new-password"
                         />
                       </div>
@@ -369,7 +386,7 @@
 
             <div class="navegacion">
               @if (pasoActual() > 1) {
-                <button type="button" class="boton boton--secundario" (click)="anterior()">
+                <button type="button" class="boton boton--secundario" [disabled]="cargando()" (click)="anterior()">
                   &larr; Anterior
                 </button>
               }
@@ -379,8 +396,13 @@
                 </button>
               }
               @if (pasoActual() === 3) {
-                <button type="submit" class="boton">
-                  Crear mi cuenta <span aria-hidden="true">&rarr;</span>
+                <button type="submit" class="boton" [disabled]="cargando()">
+                  @if (cargando()) {
+                    <span class="boton__spinner" aria-hidden="true"></span>
+                    <span>Creando cuenta...</span>
+                  } @else {
+                    <span>Crear mi cuenta</span> <span aria-hidden="true">&rarr;</span>
+                  }
                 </button>
               }
             </div>

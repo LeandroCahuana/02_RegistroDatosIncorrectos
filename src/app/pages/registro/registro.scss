@@ -652,6 +652,16 @@
 
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 
+  &__spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: girar 0.7s linear infinite;
+    display: inline-block;
+  }
+
   &--secundario {
     background: #fff;
     color: #4b5563;
@@ -664,6 +674,80 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(109, 40, 217, 0.1);
     }
+  }
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════
+   ALERTAS Y ESTADOS (ERROR / ÉXITO)
+═══════════════════════════════════════════ */
+.alerta-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  margin-bottom: 1.25rem;
+  background-color: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 12px;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+
+  svg {
+    flex-shrink: 0;
+    stroke: #ef4444;
+  }
+}
+
+.exito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+
+  &__icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 5rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    color: white;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+  }
+
+  &__titulo {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.75rem;
+  }
+
+  &__desc {
+    font-size: 1rem;
+    color: #4b5563;
+    max-width: 380px;
+    line-height: 1.5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
