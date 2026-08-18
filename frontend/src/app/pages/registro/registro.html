@@ -1,0 +1,414 @@
+<main class="registro">
+  <div class="panel">
+    <aside class="panel__marca">
+
+      <!-- ① Encabezado: logo + nombre -->
+      <div class="marca__header">
+        <span class="marca__logo">
+          <svg
+            class="marca__logo-svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 9V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a3 3 0 0 0 0 6v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a3 3 0 0 0 0-6Z" />
+            <path d="M13 5v3" />
+            <path d="M13 16v3" />
+          </svg>
+        </span>
+        <div class="marca__logo-text">
+          <span class="marca__nombre">EventPass</span>
+          <p class="marca__eslogan">Tu entrada a los mejores eventos</p>
+        </div>
+      </div>
+
+      <!-- ② Tarjeta central -->
+      <div class="marca__card">
+
+        <!-- Puntos decorativos grid -->
+        <div class="marca__dots" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+
+        <!-- Destello + badge -->
+        <div class="marca__estrella" aria-hidden="true">
+          <span class="marca__estrella-ico">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.09 6.43H21l-5.47 3.97 2.09 6.43L12 14.87l-5.62 3.96 2.09-6.43L3 8.43h6.91z"/>
+            </svg>
+          </span>
+          <span class="marca__estrella-badge">Nuevo registro</span>
+        </div>
+
+        <!-- Cuerpo: texto -->
+        <div class="marca__card-texto">
+          <h2 class="marca__cta-titulo">Crea tu<br>cuenta</h2>
+          <div class="marca__cta-linea" aria-hidden="true"></div>
+          <p class="marca__cta-desc">
+            Únete a EventPass y disfruta de
+            <strong>experiencias inolvidables.</strong>
+          </p>
+        </div>
+
+        <!-- Ilustración -->
+        <div class="marca__ilustracion">
+          <img
+            src="images/ilustracion-concierto.svg"
+            alt="Concierto con ticket EventPass"
+            class="marca__ilustracion-img"
+          />
+        </div>
+      </div>
+
+      <!-- ③ Badge seguridad -->
+      <div class="marca__seguridad">
+        <span class="marca__seguridad-ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <rect x="9" y="10" width="6" height="6" rx="1"/>
+            <line x1="12" y1="10" x2="12" y2="8"/>
+          </svg>
+        </span>
+        <p class="marca__seguridad-texto">
+          Tu información está <strong>segura</strong> con nosotros.
+        </p>
+      </div>
+
+    </aside>
+
+    <section class="panel__form">
+      <div class="card">
+        <header class="card__header">
+          <h1>Crea tu cuenta</h1>
+          <p class="card__requerido">
+            <span class="asterisco">*</span> Obligatorio
+          </p>
+        </header>
+
+        @if (mensajeErrorServidor()) {
+          <div class="alerta-error" role="alert">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ mensajeErrorServidor() }}</span>
+          </div>
+        }
+
+        @if (exitoso()) {
+          <div class="exito" role="status">
+            <div class="exito__icono">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h2 class="exito__titulo">¡Cuenta creada con éxito!</h2>
+            <p class="exito__desc">Tu usuario ha sido registrado correctamente en la base de datos.</p>
+          </div>
+        } @else {
+          <nav class="pasos" aria-label="Progreso del registro">
+            @for (paso of pasos; track paso.numero) {
+              <div
+                class="paso"
+                [class.paso--activo]="pasoActual() === paso.numero"
+                [class.paso--completado]="pasoActual() > paso.numero"
+              >
+                <span class="paso__numero" aria-hidden="true">
+                  {{ pasoActual() > paso.numero ? '✓' : paso.numero }}
+                </span>
+                <span class="paso__titulo">{{ paso.titulo }}</span>
+              </div>
+              @if (!$last) {
+                <span class="paso__linea" aria-hidden="true"></span>
+              }
+            }
+          </nav>
+
+          <div class="progreso" aria-hidden="true">
+            <div
+              class="progreso__relleno"
+              [style.width.%]="(pasoActual() / pasos.length) * 100"
+            ></div>
+          </div>
+
+          <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+            @if (pasoActual() === 1) {
+              <div class="paso__contenido" [class.paso__contenido--atras]="direccion() === 'atras'">
+                <h2 class="seccion">Información personal
+                  <span class="seccion__sub">Completa tus datos para continuar.</span>
+                </h2>
+                <div formGroupName="paso1">
+                  <div class="campo__fila">
+                    <div class="campo" [class.campo--error]="mostrarError('paso1.nombre')">
+                      <label for="nombre">
+                        Nombre <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="nombre"
+                          type="text"
+                          formControlName="nombre"
+                          placeholder="Ej. Ana María"
+                          autocomplete="given-name"
+                        />
+                      </div>
+                      @if (mostrarError('paso1.nombre')) {
+                        <p class="campo__error">{{ mensaje('paso1.nombre') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo" [class.campo--error]="mostrarError('paso1.apellidos')">
+                      <label for="apellidos">
+                        Apellidos <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="apellidos"
+                          type="text"
+                          formControlName="apellidos"
+                          placeholder="Ej. López"
+                          autocomplete="family-name"
+                        />
+                      </div>
+                      @if (mostrarError('paso1.apellidos')) {
+                        <p class="campo__error">{{ mensaje('paso1.apellidos') }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="campo__fila">
+                    <div class="campo" [class.campo--error]="mostrarError('paso1.tipoDocumento')">
+                      <label for="tipoDocumento">
+                        Tipo de documento <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <select id="tipoDocumento" formControlName="tipoDocumento">
+                          <option value="" disabled>Selecciona una opción</option>
+                          @for (tipo of tiposDocumento; track tipo) {
+                            <option [value]="tipo">{{ tipo }}</option>
+                          }
+                        </select>
+                      </div>
+                      @if (mostrarError('paso1.tipoDocumento')) {
+                        <p class="campo__error">{{ mensaje('paso1.tipoDocumento') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo" [class.campo--error]="mostrarError('paso1.numeroDocumento')">
+                      <label for="numeroDocumento">
+                        Número de documento <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="numeroDocumento"
+                          type="text"
+                          inputmode="numeric"
+                          formControlName="numeroDocumento"
+                          placeholder="Ej. 1020304050"
+                          autocomplete="off"
+                        />
+                      </div>
+                      @if (mostrarError('paso1.numeroDocumento')) {
+                        <p class="campo__error">{{ mensaje('paso1.numeroDocumento') }}</p>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (pasoActual() === 2) {
+              <div class="paso__contenido" [class.paso__contenido--atras]="direccion() === 'atras'">
+                <h2 class="seccion">Contacto y edad
+                  <span class="seccion__sub">Ingresa tu información de contacto.</span>
+                </h2>
+                <div formGroupName="paso2">
+                  <div class="campo__fila">
+                    <div class="campo" [class.campo--error]="mostrarError('paso2.correo')">
+                      <label for="correo">
+                        Correo electrónico <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="correo"
+                          type="email"
+                          formControlName="correo"
+                          placeholder="tu@correo.com"
+                          autocomplete="email"
+                        />
+                      </div>
+                      @if (mostrarError('paso2.correo')) {
+                        <p class="campo__error">{{ mensaje('paso2.correo') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo" [class.campo--error]="mostrarError('paso2.celular')">
+                      <label for="celular">
+                        Número de celular <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="celular"
+                          type="tel"
+                          formControlName="celular"
+                          placeholder="912345678"
+                          autocomplete="tel"
+                        />
+                      </div>
+                      @if (mostrarError('paso2.celular')) {
+                        <p class="campo__error">{{ mensaje('paso2.celular') }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="campo__fila">
+                    <div class="campo" [class.campo--error]="mostrarError('paso2.edad')">
+                      <label for="edad">
+                        Edad <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="edad"
+                          type="number"
+                          inputmode="numeric"
+                          min="18"
+                          max="99"
+                          formControlName="edad"
+                          placeholder="18"
+                          autocomplete="off"
+                        />
+                      </div>
+                      @if (mostrarError('paso2.edad')) {
+                        <p class="campo__error">{{ mensaje('paso2.edad') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo" [class.campo--error]="mostrarError('paso2.sexo')">
+                      <label class="campo__label" for="sexoMasculino">
+                        Sexo <span class="asterisco">*</span>
+                      </label>
+                      <div class="radio-group">
+                        @for (opcion of sexos; track opcion) {
+                          <label class="radio">
+                            <input
+                              id="sexo{{ opcion }}"
+                              type="radio"
+                              formControlName="sexo"
+                              [value]="opcion"
+                            />
+                            <span>{{ opcion }}</span>
+                          </label>
+                        }
+                      </div>
+                      @if (mostrarError('paso2.sexo')) {
+                        <p class="campo__error">{{ mensaje('paso2.sexo') }}</p>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (pasoActual() === 3) {
+              <div class="paso__contenido" [class.paso__contenido--atras]="direccion() === 'atras'">
+                <h2 class="seccion">Seguridad de la cuenta
+                  <span class="seccion__sub">Crea una contraseña segura para tu cuenta.</span>
+                </h2>
+                <div formGroupName="paso3">
+                  <div class="campo__fila">
+                    <div class="campo" [class.campo--error]="mostrarError('paso3.contrasena')">
+                      <label for="contrasena">
+                        Contraseña <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="contrasena"
+                          type="password"
+                          formControlName="contrasena"
+                          placeholder="Mínimo 8 car., Mayús, Núm, Símbolo"
+                          autocomplete="new-password"
+                        />
+                      </div>
+                      @if (mostrarError('paso3.contrasena')) {
+                        <p class="campo__error">{{ mensaje('paso3.contrasena') }}</p>
+                      }
+                    </div>
+
+                    <div class="campo" [class.campo--error]="mostrarError('paso3.confirmarContrasena')">
+                      <label for="confirmarContrasena">
+                        Confirmar contraseña <span class="asterisco">*</span>
+                      </label>
+                      <div class="campo__control">
+                        <input
+                          id="confirmarContrasena"
+                          type="password"
+                          formControlName="confirmarContrasena"
+                          placeholder="Repite tu contraseña"
+                          autocomplete="new-password"
+                        />
+                      </div>
+                      @if (mostrarError('paso3.confirmarContrasena')) {
+                        <p class="campo__error">{{ mensaje('paso3.confirmarContrasena') }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="campo campo--check" [class.campo--error]="mostrarError('paso3.aceptaTerminos')">
+                    <input id="aceptaTerminos" type="checkbox" formControlName="aceptaTerminos" />
+                    <label for="aceptaTerminos">
+                      Acepto los términos y condiciones.
+                    </label>
+                    @if (mostrarError('paso3.aceptaTerminos')) {
+                      <p class="campo__error">{{ mensaje('paso3.aceptaTerminos') }}</p>
+                    }
+                  </div>
+
+                  <div class="campo campo--check" [class.campo--error]="mostrarError('paso3.aceptaPrivacidad')">
+                    <input id="aceptaPrivacidad" type="checkbox" formControlName="aceptaPrivacidad" />
+                    <label for="aceptaPrivacidad">
+                      Acepto la política de privacidad.
+                    </label>
+                    @if (mostrarError('paso3.aceptaPrivacidad')) {
+                      <p class="campo__error">{{ mensaje('paso3.aceptaPrivacidad') }}</p>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="navegacion">
+              @if (pasoActual() > 1) {
+                <button type="button" class="boton boton--secundario" [disabled]="cargando()" (click)="anterior()">
+                  &larr; Anterior
+                </button>
+              }
+              @if (pasoActual() < 3) {
+                <button type="button" class="boton" (click)="siguiente()">
+                  Siguiente <span aria-hidden="true">&rarr;</span>
+                </button>
+              }
+              @if (pasoActual() === 3) {
+                <button type="submit" class="boton" [disabled]="cargando()">
+                  @if (cargando()) {
+                    <span class="boton__spinner" aria-hidden="true"></span>
+                    <span>Creando cuenta...</span>
+                  } @else {
+                    <span>Crear mi cuenta</span> <span aria-hidden="true">&rarr;</span>
+                  }
+                </button>
+              }
+            </div>
+          </form>
+        }
+      </div>
+    </section>
+  </div>
+</main>
